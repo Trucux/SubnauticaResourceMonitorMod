@@ -11,8 +11,8 @@ Two new items:
 * Resource Monitor Screen Small - A small screen that takes up alot less space on the wall.
 
 #### Libraries
-* QModManager
-* SMLHelper v2
+* BepInEx
+* Nautilus
 * Harmony
 
 Thank you to https://github.com/RandyKnapp. The code used to create a canvas in 3D world space on top of the model is his.
