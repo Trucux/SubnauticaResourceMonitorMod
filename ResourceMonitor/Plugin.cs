@@ -1,17 +1,14 @@
 ﻿using System;
 using HarmonyLib;
-using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
-using System.Text;
 using BepInEx;
 using BepInEx.Configuration;
 using UnityEngine;
-using Newtonsoft.Json;
 
 namespace ResourceMonitor
 {
     [BepInPlugin(GUID, MODNAME, VERSION)]
+    [BepInDependency("com.snmodding.nautilus")]
     internal class Plugin : BaseUnityPlugin
     {
         public const string MOD_FOLDER_LOCATION = "./BepInEx/plugins/ResourceMonitor/";
@@ -38,13 +35,16 @@ namespace ResourceMonitor
             Console.WriteLine("ResourceMonitor - Started patching v" + Assembly.GetExecutingAssembly().GetName().Version.ToString(3));
             var harmony = new Harmony(GUID);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
-            new Game_Items.ResourceMonitorScreenLarge().Patch();
-            new Game_Items.ResourceMonitorScreenSmall().Patch();
+
 #if BZ
             LoadDontTrackList();
 #endif
             LoadAssets();
             LoadSettings();
+
+            MonitorLarge.Register();
+            MonitorSmall.Register();
+
             Console.WriteLine("ResourceMonitor - Finished patching");
         }
         private static void LoadAssets()
