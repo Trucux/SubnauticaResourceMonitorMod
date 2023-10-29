@@ -89,7 +89,9 @@
     <Compile Include="Components\ResourceMonitorDisplay.cs" />
     <Compile Include="Components\ResourceMonitorLogic.cs" />
     <Compile Include="Components\PaginatorButton.cs" />
-    <Compile Include="Game Items\ResourceMonitorPrefab.cs" />
+    <Compile Include="Game Items\ResourceMonitor.cs" />
+    <Compile Include="Game Items\ResourceMonitorLargePrefab.cs" />
+    <Compile Include="Game Items\ResourceMonitorSmallPrefab.cs" />
     <Compile Include="Options.cs" />
     <Compile Include="Patchers\InGameMenuQuitPatcher.cs" />
     <Compile Include="Patchers\QuitGamePatcher.cs" />

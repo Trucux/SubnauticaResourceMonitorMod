@@ -38,20 +38,29 @@ namespace ResourceMonitor
 
         public void Awake()
         {
+            // Setup Project Logger
             Logger = base.Logger;
+
+            // Load Options from the BepInEx config and setup the options menu
             Options = OptionsPanelHandler.RegisterModOptions<Options>();
+
+            // Run harmony patches
             Logger.LogInfo("ResourceMonitor - Started patching v" + Assembly.GetExecutingAssembly().GetName().Version.ToString(3));
             var harmony = new Harmony(GUID);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
             LoadDontTrackList();
             LoadAssets();
-
-            MonitorLarge.Register();
-            MonitorSmall.Register();
+            RegisterPrefabs();
 
             Logger.LogInfo("ResourceMonitor - Finished patching");
         }
+        private static void RegisterPrefabs()
+        {
+            ResourceMonitorLargePrefab.Register();
+            ResourceMonitorSmallPrefab.Register();
+        }
+
         private static void LoadAssets()
         {
             var ab = AssetBundle.LoadFromFile(ASSET_BUNDLE_LOCATION);
