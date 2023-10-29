@@ -90,6 +90,7 @@
     <Compile Include="Components\ResourceMonitorLogic.cs" />
     <Compile Include="Components\PaginatorButton.cs" />
     <Compile Include="Game Items\ResourceMonitorPrefab.cs" />
+    <Compile Include="Options.cs" />
     <Compile Include="Patchers\InGameMenuQuitPatcher.cs" />
     <Compile Include="Patchers\QuitGamePatcher.cs" />
     <Compile Include="Patchers\StorageContainerPatcher.cs" />

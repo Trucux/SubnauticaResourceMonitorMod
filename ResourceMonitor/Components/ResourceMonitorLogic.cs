@@ -45,7 +45,7 @@ namespace ResourceMonitor.Components
             if (seaBase == null)
             {
                 ErrorMessage.AddMessage("[ResourceMonitor] ERROR: Can not work out what base it was placed inside.");
-                System.Console.WriteLine("[ResourceMonitor] ERROR: Can not work out what base it was placed inside.");
+                Plugin.Logger.LogError("[ResourceMonitor] ERROR: Can not work out what base it was placed inside.");
                 yield break;
             }
 

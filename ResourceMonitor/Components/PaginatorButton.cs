@@ -22,7 +22,7 @@ namespace ResourceMonitor.Components
         {
             if (text != null)
             {
-                text.color = Plugin.PaginatorStartingColor.Value;
+                text.color = Options.Current.PaginatorStartingColor;
             }
         }
 
@@ -30,7 +30,7 @@ namespace ResourceMonitor.Components
         {
             if (text != null)
             {
-                text.color = Plugin.PaginatorStartingColor.Value;
+                text.color = Options.Current.PaginatorStartingColor;
             }
             base.OnDisable();
         }
@@ -40,14 +40,14 @@ namespace ResourceMonitor.Components
             base.OnPointerEnter(eventData);
             if (IsHovered)
             {
-                text.color = Plugin.PaginatorHoverColor.Value;
+                text.color = Options.Current.PaginatorHoverColor;
             }
         }
 
         public override void OnPointerExit(PointerEventData eventData)
         {
             base.OnPointerExit(eventData);
-            text.color = Plugin.PaginatorStartingColor.Value;
+            text.color = Options.Current.PaginatorStartingColor;
         }
 
         public override void OnPointerClick(PointerEventData eventData)

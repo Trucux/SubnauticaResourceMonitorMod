@@ -30,7 +30,7 @@ namespace ResourceMonitor.Components
         private Dictionary<TechType, GameObject> trackedResourcesDisplayElements;
         public int currentPage = 1;
         public int maxPage = 1;
-        private float idlePeriodLength = Plugin.IdleTime.Value;
+        private float idlePeriodLength = Options.Current.IdleTime;
         private float timeSinceLastInteraction = 0f;
         private bool isIdle = false;
         private float nextColorTransitionCurrentTime;
@@ -212,7 +212,7 @@ namespace ResourceMonitor.Components
                 timeSinceLastInteraction += Time.deltaTime;
             }
 
-            if (Plugin.EnableIdle.Value && isIdle == false && timeSinceLastInteraction >= idlePeriodLength)
+            if (Options.Current.EnableIdle && isIdle == false && timeSinceLastInteraction >= idlePeriodLength)
             {
                 EnterIdleScreen();
             }
@@ -256,7 +256,7 @@ namespace ResourceMonitor.Components
 
         private bool InIdleInteractionRange()
         {
-            return Mathf.Abs(Vector3.Distance(gameObject.transform.position, Player.main.transform.position)) <= Plugin.MaxInteractionIdlePageDistance.Value;
+            return Mathf.Abs(Vector3.Distance(gameObject.transform.position, Player.main.transform.position)) <= Options.Current.MaxInteractionIdlePageDistance;
         }
         
         public void OnPointerClick(PointerEventData eventData)
@@ -324,7 +324,7 @@ namespace ResourceMonitor.Components
         
         private void CalculateNewIdleTime()
         {
-            idlePeriodLength = Plugin.IdleTime.Value + Random.Range(Plugin.IdleTimeRandomnessLowBound.Value, Plugin.IdleTimeRandomnessHighBound.Value);
+            idlePeriodLength = Options.Current.IdleTime + Random.Range(Options.Current.IdleTimeRandomnessLowBound, Options.Current.IdleTimeRandomnessHighBound);
         }
 
         public void ResetIdleTimer()
@@ -334,7 +334,7 @@ namespace ResourceMonitor.Components
 
         private void CalculateNewColourTransitionTime()
         {
-            transitionIdleTime = Plugin.IdleScreenColorTransitionTime.Value + Random.Range(Plugin.IdleScreenColorTransitionRandomnessLowBound.Value, Plugin.IdleScreenColorTransitionRandomnessHighBound.Value);
+            transitionIdleTime = Options.Current.IdleScreenColorTransitionTime + Random.Range(Options.Current.IdleScreenColorTransitionRandomnessLowBound, Options.Current.IdleScreenColorTransitionRandomnessHighBound);
         }
 
         public void OnApplicationQuit()
@@ -347,77 +347,77 @@ namespace ResourceMonitor.Components
             CanvasGameObject = gameObject.GetComponentInChildren<Canvas>()?.gameObject;
             if (CanvasGameObject == null)
             {
-                System.Console.WriteLine("[ResourceMonitor] Canvas not found.");
+                Plugin.Logger.LogError("[ResourceMonitor] Canvas not found.");
                 return false;
             }
 
             animator = CanvasGameObject.GetComponent<Animator>();
             if (animator == null)
             {
-                System.Console.WriteLine("[ResourceMonitor] Animator not found.");
+                Plugin.Logger.LogError("[ResourceMonitor] Animator not found.");
                 return false;
             }
 
             blackCover = CanvasGameObject.FindChild("BlackCover")?.gameObject;
             if (blackCover == null)
             {
-                System.Console.WriteLine("[ResourceMonitor] BlackCover not found.");
+                Plugin.Logger.LogError("[ResourceMonitor] BlackCover not found.");
                 return false;
             }
 
             var screenHolder = CanvasGameObject.transform.Find("Screens")?.gameObject;
             if (screenHolder == null)
             {
-                System.Console.WriteLine("[ResourceMonitor] Screen Holder Gameobject not found.");
+                Plugin.Logger.LogError("[ResourceMonitor] Screen Holder Gameobject not found.");
                 return false;
             }
 
             welcomeScreen = screenHolder.FindChild("WelcomeScreen")?.gameObject;
             if (welcomeScreen == null)
             {
-                System.Console.WriteLine("[ResourceMonitor] Screen: WelcomeScreen not found.");
+                Plugin.Logger.LogError("[ResourceMonitor] Screen: WelcomeScreen not found.");
                 return false;
             }
 
             mainScreen = screenHolder.FindChild("MainScreen")?.gameObject;
             if (mainScreen == null)
             {
-                System.Console.WriteLine("[ResourceMonitor] Screen: MainScreen not found.");
+                Plugin.Logger.LogError("[ResourceMonitor] Screen: MainScreen not found.");
                 return false;
             }
 
             mainScreensCover = mainScreen.FindChild("BlackCover")?.gameObject;
             if (mainScreensCover == null)
             {
-                System.Console.WriteLine("[ResourceMonitor] Screen: MainScreen Cover not found.");
+                Plugin.Logger.LogError("[ResourceMonitor] Screen: MainScreen Cover not found.");
                 return false;
             }
 
             var actualMainScreen = mainScreen.FindChild("ActualScreen")?.gameObject;
             if (actualMainScreen == null)
             {
-                System.Console.WriteLine("[ResourceMonitor] Screen: Actual Main Screen not found.");
+                Plugin.Logger.LogError("[ResourceMonitor] Screen: Actual Main Screen not found.");
                 return false;
             }
 
             mainScreenItemGrid = actualMainScreen.FindChild("MainGrid")?.gameObject;
             if (mainScreenItemGrid == null)
             {
-                System.Console.WriteLine("[ResourceMonitor] Screen: Main Screen Item Grid not found.");
+                Plugin.Logger.LogError("[ResourceMonitor] Screen: Main Screen Item Grid not found.");
                 return false;
             }
 
             var paginator = actualMainScreen.FindChild("Paginator")?.gameObject;
             if (paginator == null)
             {
-                System.Console.WriteLine("[ResourceMonitor] Screen: Paginator not found.");
+                Plugin.Logger.LogError("[ResourceMonitor] Screen: Paginator not found.");
                 return false;
             }
 
             previousPageGameObject = paginator.FindChild("PreviousPage")?.gameObject;
             if (previousPageGameObject == null)
             {
-                System.Console.WriteLine("[ResourceMonitor] Screen: Previous Page GameObject not found.");
+                Plugin.Logger.LogError("[ResourceMonitor] Screen: Previous Page GameObject not found.");
                 return false;
             }
             
@@ -428,7 +428,7 @@ namespace ResourceMonitor.Components
             nextPageGameObject = paginator.FindChild("NextPage")?.gameObject;
             if (nextPageGameObject == null)
             {
-                System.Console.WriteLine("[ResourceMonitor] Screen: Next Page GameObject not found.");
+                Plugin.Logger.LogError("[ResourceMonitor] Screen: Next Page GameObject not found.");
                 return false;
             }
             var pb2 = nextPageGameObject.AddComponent<PaginatorButton>();
@@ -438,35 +438,35 @@ namespace ResourceMonitor.Components
             pageCounterGameObject = paginator.FindChild("PageCounter")?.gameObject;
             if (pageCounterGameObject == null)
             {
-                System.Console.WriteLine("[ResourceMonitor] Screen: Page Counter GameObject not found.");
+                Plugin.Logger.LogError("[ResourceMonitor] Screen: Page Counter GameObject not found.");
                 return false;
             }
 
             pageCounterText = pageCounterGameObject.GetComponent<Text>();
             if (pageCounterText == null)
             {
-                System.Console.WriteLine("[ResourceMonitor] Screen: Page Counter Text not found.");
+                Plugin.Logger.LogError("[ResourceMonitor] Screen: Page Counter Text not found.");
                 return false;
             }
 
             idleScreen = screenHolder.FindChild("IdleScreen")?.gameObject;
             if (idleScreen == null)
             {
-                System.Console.WriteLine("[ResourceMonitor] Screen: IdleScreen not found.");
+                Plugin.Logger.LogError("[ResourceMonitor] Screen: IdleScreen not found.");
                 return false;
             }
 
             var idleScreenTitleBackground = idleScreen.FindChild("AlterraTitleBackground")?.gameObject;
             if (idleScreenTitleBackground == null)
             {
-                System.Console.WriteLine("[ResourceMonitor] Screen: IdleScreen Background not found.");
+                Plugin.Logger.LogError("[ResourceMonitor] Screen: IdleScreen Background not found.");
                 return false;
             }
 
             idleScreenTitleBackgroundImage = idleScreenTitleBackground.GetComponent<Image>();
             if (idleScreenTitleBackground == null)
             {
-                System.Console.WriteLine("[ResourceMonitor] Screen: IdleScreen Background Image not found.");
+                Plugin.Logger.LogError("[ResourceMonitor] Screen: IdleScreen Background Image not found.");
                 return false;
             }
 
