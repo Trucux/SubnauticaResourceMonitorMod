@@ -58,12 +58,9 @@ namespace ResourceMonitor
             constructable.allowedInSub = true;
             constructable.allowedOnGround = false;
             constructable.allowedOutside = false;
+            constructable.allowedUnderwater = false;
             constructable.model = screenModel;
             constructable.techType = this.PrefabInfo.TechType;
-            constructable.forceUpright = false;
-            constructable.alignWithSurface = true;
-            constructable.attachedToBase = true;
-            constructable.allowedUnderwater = false;
             constructable.ExcludeFromSubParentRigidbody(); // LMAO im literally dying this fixed it.
 
             screen.AddComponent<TechTag>().type = this.PrefabInfo.TechType;
