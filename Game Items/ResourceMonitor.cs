@@ -3,6 +3,7 @@ using Nautilus.Crafting;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using static RootMotion.FinalIK.RagdollUtility;
 
 namespace ResourceMonitor
 {
@@ -35,16 +36,11 @@ namespace ResourceMonitor
 
         public GameObject CreateObject()
         {
-            // Create game object from scratch:
+            // Create the main game object for the Resource Monitor
             var screen = UnityEngine.Object.Instantiate(Plugin.RESOURCE_MONITOR_DISPLAY_MODEL);
             var screenModel = screen.transform.GetChild(0).gameObject;
 
-            var colliders = screen.GetComponentsInChildren<Collider>();
-            foreach (var collider in colliders)
-            {
-                collider.isTrigger = true;
-            }
-
+            // Apply shader
             var shader = Shader.Find("MarmosetUBER");
             var renderers = screen.GetComponentsInChildren<Renderer>();
             foreach (var renderer in renderers)
@@ -56,7 +52,7 @@ namespace ResourceMonitor
             skyApplier.renderers = renderers;
             skyApplier.anchorSky = Skies.Auto;
 
-            // Make it Buildable:
+            // Make it Buildable, using the separate construction model
             var constructable = screen.AddComponent<Constructable>();
             constructable.allowedOnWall = true;
             constructable.allowedInSub = true;
@@ -64,19 +60,22 @@ namespace ResourceMonitor
             constructable.allowedOutside = false;
             constructable.model = screenModel;
             constructable.techType = this.PrefabInfo.TechType;
+            constructable.forceUpright = false;
+            constructable.alignWithSurface = true;
+            constructable.attachedToBase = true;
+            constructable.allowedUnderwater = false;
+            constructable.ExcludeFromSubParentRigidbody(); // LMAO im literally dying this fixed it.
 
-            // Add game components
-            screen.AddComponent<ConstructableBounds>().bounds = new OrientedBounds(new Vector3(-0.1f, -0.1f, 0f), new Quaternion(0, 0, 0, 0), new Vector3(0.9f, 0.5f, 0f));
             screen.AddComponent<TechTag>().type = this.PrefabInfo.TechType;
             screen.AddComponent<PrefabIdentifier>().ClassId = this.PrefabInfo.ClassID;
             screen.AddComponent<VFXSurface>();
             screen.AddComponent<Components.ResourceMonitorLogic>();
 
-            // Modify scale of the model:
+            // Modify scale of the model if needed
             if (this.IsLarge)
                 screen.transform.localScale = LargeScale;
 
-            // Return new object
+            // Return the main game object
             return screen;
         }
     }
