@@ -1,0 +1,83 @@
+﻿using Nautilus.Assets;
+using Nautilus.Crafting;
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace ResourceMonitor
+{
+    public class ResourceMonitor
+    {
+        public static readonly Vector3 LargeScale = new Vector3(2.3f, 2.3f, 1f);
+        public PrefabInfo PrefabInfo { get; private set; }
+        public Boolean IsLarge { get; private set; }
+        public ResourceMonitor(PrefabInfo prefabInfo, bool isLarge = false)
+        {
+            this.PrefabInfo = prefabInfo;
+            this.IsLarge = isLarge;
+        }
+        public RecipeData GetRecipe()
+        {
+            int numIngredients = 1;
+            if (this.IsLarge)
+                numIngredients = 2;
+            return new RecipeData()
+            {
+                craftAmount = 1,
+                Ingredients = new List<CraftData.Ingredient>()
+                {
+                    new CraftData.Ingredient(TechType.Glass, numIngredients),
+                    new CraftData.Ingredient(TechType.ComputerChip, numIngredients),
+                    new CraftData.Ingredient(TechType.AdvancedWiringKit, numIngredients)
+                }
+            };
+        }
+
+        public GameObject CreateObject()
+        {
+            // Create game object from scratch:
+            var screen = UnityEngine.Object.Instantiate(Plugin.RESOURCE_MONITOR_DISPLAY_MODEL);
+            var screenModel = screen.transform.GetChild(0).gameObject;
+
+            var colliders = screen.GetComponentsInChildren<Collider>();
+            foreach (var collider in colliders)
+            {
+                collider.isTrigger = true;
+            }
+
+            var shader = Shader.Find("MarmosetUBER");
+            var renderers = screen.GetComponentsInChildren<Renderer>();
+            foreach (var renderer in renderers)
+            {
+                renderer.material.shader = shader;
+            }
+
+            var skyApplier = screen.AddComponent<SkyApplier>();
+            skyApplier.renderers = renderers;
+            skyApplier.anchorSky = Skies.Auto;
+
+            // Make it Buildable:
+            var constructable = screen.AddComponent<Constructable>();
+            constructable.allowedOnWall = true;
+            constructable.allowedInSub = true;
+            constructable.allowedOnGround = false;
+            constructable.allowedOutside = false;
+            constructable.model = screenModel;
+            constructable.techType = this.PrefabInfo.TechType;
+
+            // Add game components
+            screen.AddComponent<ConstructableBounds>().bounds = new OrientedBounds(new Vector3(-0.1f, -0.1f, 0f), new Quaternion(0, 0, 0, 0), new Vector3(0.9f, 0.5f, 0f));
+            screen.AddComponent<TechTag>().type = this.PrefabInfo.TechType;
+            screen.AddComponent<PrefabIdentifier>().ClassId = this.PrefabInfo.ClassID;
+            screen.AddComponent<VFXSurface>();
+            screen.AddComponent<Components.ResourceMonitorLogic>();
+
+            // Modify scale of the model:
+            if (this.IsLarge)
+                screen.transform.localScale = LargeScale;
+
+            // Return new object
+            return screen;
+        }
+    }
+}
