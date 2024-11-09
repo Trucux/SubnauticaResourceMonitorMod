@@ -59,6 +59,7 @@ namespace ResourceMonitor
             constructable.allowedOnGround = false;
             constructable.allowedOutside = false;
             constructable.allowedUnderwater = false;
+            constructable.deconstructionAllowed = true;
             constructable.model = screenModel;
             constructable.techType = this.PrefabInfo.TechType;
             constructable.ExcludeFromSubParentRigidbody(); // LMAO im literally dying this fixed it.

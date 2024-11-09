@@ -1,10 +1,13 @@
-﻿using BepInEx.Logging;
-using BepInEx;
+﻿using System;
 using HarmonyLib;
-using Nautilus.Handlers;
-using System.IO;
 using System.Reflection;
+using BepInEx;
+using BepInEx.Configuration;
 using UnityEngine;
+using System.IO;
+using BepInEx.Logging;
+using Nautilus.Handlers;
+using System.Security.Cryptography;
 
 namespace ResourceMonitor
 {
@@ -12,11 +15,10 @@ namespace ResourceMonitor
     [BepInDependency("com.snmodding.nautilus")]
     internal class Plugin : BaseUnityPlugin
     {
-        public static string MOD_FOLDER_LOCATION { get; private set; }
-        public static string ASSETS_FOLDER_LOCATION { get; private set; }
-        public static string ASSET_BUNDLE_LOCATION { get; private set; }
-        public static string SETTINGS_FILE_LOCATION { get; private set; }
-        public static string DONT_TRACK_LOCATION { get; private set; }
+        public static string MOD_FOLDER_LOCATION;
+        public static string ASSETS_FOLDER_LOCATION;
+        public static string ASSET_BUNDLE_LOCATION;
+        public static string DONT_TRACK_LOCATION;
 
         public static GameObject RESOURCE_MONITOR_DISPLAY_UI_PREFAB { get; private set; }
         public static GameObject RESOURCE_MONITOR_DISPLAY_ITEM_UI_PREFAB { get; private set; }
@@ -25,18 +27,48 @@ namespace ResourceMonitor
         public new static ManualLogSource Logger { get; private set; }
         public static Options Options { get; private set; }
 
-        private const string MODNAME = "ResourceMonitor";
-        private const string AUTHOR = "taylor";
-        private const string GUID = "taylor.brett.ResourceMonitor.mod";
-        private const string VERSION = "2.0.33";
+        #region[Declarations]
+        private const string
+            MODNAME = "ResourceMonitor",
+            AUTHOR = "taylor",
+            GUID = "taylor.brett.ResourceMonitor.mod",
+            VERSION = "2.0.33";
+        #endregion
 
         public void Awake()
         {
+            // Determine the folder paths based on file existence
+            if (Directory.Exists("./QMods/ResourceMonitor/"))
+            {
+                MOD_FOLDER_LOCATION = "./QMods/ResourceMonitor/";
+            }
+            else
+            {
+                MOD_FOLDER_LOCATION = "./BepInEx/plugins/ResourceMonitor/";
+
+                // Check if required files and folders exist in BepInEx/plugins/ResourceMonitor
+                bool assetsFolderExists = Directory.Exists(MOD_FOLDER_LOCATION + "Assets/");
+                bool assetBundleExists = File.Exists(MOD_FOLDER_LOCATION + "Assets/resources");
+                bool dontTrackListExists = File.Exists(MOD_FOLDER_LOCATION + "DontTrackList.txt");
+
+                if (!assetsFolderExists || !assetBundleExists || !dontTrackListExists)
+                {
+                    // Log an error message with instructions
+                    Logger.LogError("ResourceMonitor Unofficial Patch is installed incorrectly!");
+                    Logger.LogError("Please install the original mod to the QMods folder via Vortex.");
+                    Logger.LogError("If you chose to install the original to the BepInEx/plugins folder, you must overwrite the DLL with the patch!");
+
+                    // Return early to prevent further execution
+                    return;
+                }
+            }
+
+            ASSETS_FOLDER_LOCATION = MOD_FOLDER_LOCATION + "Assets/";
+            ASSET_BUNDLE_LOCATION = ASSETS_FOLDER_LOCATION + "resources";
+            DONT_TRACK_LOCATION = MOD_FOLDER_LOCATION + "DontTrackList.txt";
+
             // Setup Project Logger
             Logger = base.Logger;
-
-            // Determine the folder paths based on file existence
-            SetModPaths();
 
             // Load Options from the BepInEx config and setup the options menu
             Options = OptionsPanelHandler.RegisterModOptions<Options>();
@@ -53,41 +85,6 @@ namespace ResourceMonitor
             Logger.LogInfo("ResourceMonitor - Finished patching");
         }
 
-        private static void SetModPaths()
-        {
-            // Primary paths in BepInEx folder
-            string bepInExModFolder = "./BepInEx/plugins/ResourceMonitor/";
-            string bepInExAssetsFolder = bepInExModFolder + "Assets/";
-
-            // Fallback paths in QMods folder
-            string qModsModFolder = "./QMods/ResourceMonitor/";
-            string qModsAssetsFolder = qModsModFolder + "Assets/";
-
-            // Check if files exist in BepInEx first, then fall back to QMods if not found
-            if (Directory.Exists(bepInExAssetsFolder) && File.Exists(bepInExModFolder + "DontTrackList.txt"))
-            {
-                MOD_FOLDER_LOCATION = bepInExModFolder;
-                ASSETS_FOLDER_LOCATION = bepInExAssetsFolder;
-            }
-            else if (Directory.Exists(qModsAssetsFolder) && File.Exists(qModsModFolder + "DontTrackList.txt"))
-            {
-                MOD_FOLDER_LOCATION = qModsModFolder;
-                ASSETS_FOLDER_LOCATION = qModsAssetsFolder;
-            }
-            else
-            {
-                Logger.LogError("ResourceMonitor - Could not find required folders or files in either BepInEx or QMods locations.");
-                return;
-            }
-
-            // Set specific file paths based on chosen folder
-            ASSET_BUNDLE_LOCATION = ASSETS_FOLDER_LOCATION + "resources";
-            SETTINGS_FILE_LOCATION = MOD_FOLDER_LOCATION + "Settings.json";
-            DONT_TRACK_LOCATION = MOD_FOLDER_LOCATION + "DontTrackList.txt";
-
-            Logger.LogInfo($"ResourceMonitor - Using MOD_FOLDER_LOCATION: {MOD_FOLDER_LOCATION}");
-            Logger.LogInfo($"ResourceMonitor - Using ASSETS_FOLDER_LOCATION: {ASSETS_FOLDER_LOCATION}");
-        }
 
         private static void RegisterPrefabs()
         {
@@ -97,30 +94,22 @@ namespace ResourceMonitor
 
         private static void LoadAssets()
         {
-            if (File.Exists(ASSET_BUNDLE_LOCATION))
-            {
-                var ab = AssetBundle.LoadFromFile(ASSET_BUNDLE_LOCATION);
-                RESOURCE_MONITOR_DISPLAY_UI_PREFAB = ab.LoadAsset("ResourceMonitorDisplayUI") as GameObject;
-                RESOURCE_MONITOR_DISPLAY_ITEM_UI_PREFAB = ab.LoadAsset("ResourceItem") as GameObject;
-                RESOURCE_MONITOR_DISPLAY_MODEL = ab.LoadAsset("ResourceMonitorModel") as GameObject;
-            }
-            else
-            {
-                Logger.LogError("[ResourceMonitor] Could not find asset bundle at " + ASSET_BUNDLE_LOCATION);
-            }
+            var ab = AssetBundle.LoadFromFile(ASSET_BUNDLE_LOCATION);
+            RESOURCE_MONITOR_DISPLAY_UI_PREFAB = ab.LoadAsset("ResourceMonitorDisplayUI") as GameObject;
+            RESOURCE_MONITOR_DISPLAY_ITEM_UI_PREFAB = ab.LoadAsset("ResourceItem") as GameObject;
+            RESOURCE_MONITOR_DISPLAY_MODEL = ab.LoadAsset("ResourceMonitorModel") as GameObject;
         }
-
         private static void LoadDontTrackList()
         {
             if (File.Exists(DONT_TRACK_LOCATION))
             {
-                Logger.LogInfo("[ResourceMonitor] Found the DontTrack list at location: " + DONT_TRACK_LOCATION);
+                Logger.LogInfo("[ResourceMonitor] Found the dont track list at location: " + DONT_TRACK_LOCATION);
                 using (var reader = new StreamReader(DONT_TRACK_LOCATION))
                 {
                     string line;
                     while ((line = reader.ReadLine()) != null)
                     {
-                        if (!string.IsNullOrEmpty(line))
+                        if (string.IsNullOrEmpty(line) == false)
                         {
                             Components.ResourceMonitorLogic.DONT_TRACK_GAMEOBJECTS.Add(line.ToLower());
                         }
@@ -130,7 +119,7 @@ namespace ResourceMonitor
             }
             else
             {
-                Logger.LogInfo("[ResourceMonitor] Did not find the DontTrack list at location: " + DONT_TRACK_LOCATION);
+                Logger.LogInfo("[ResourceMonitor] Did not find the dont track list at location: " + DONT_TRACK_LOCATION);
             }
         }
     }
