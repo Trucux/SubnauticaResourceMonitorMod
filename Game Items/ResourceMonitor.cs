@@ -55,11 +55,13 @@ namespace ResourceMonitor
             // Make it Buildable, using the separate construction model
             var constructable = screen.AddComponent<Constructable>();
             constructable.allowedOnWall = true;
+            constructable.allowedOnCeiling = true;
             constructable.allowedInSub = true;
+            constructable.allowedInBase = true;
             constructable.allowedOnGround = false;
             constructable.allowedOutside = false;
             constructable.allowedUnderwater = false;
-            constructable.deconstructionAllowed = true;
+            constructable.allowedOnConstructables = false;
             constructable.model = screenModel;
             constructable.techType = this.PrefabInfo.TechType;
             constructable.ExcludeFromSubParentRigidbody(); // LMAO im literally dying this fixed it.

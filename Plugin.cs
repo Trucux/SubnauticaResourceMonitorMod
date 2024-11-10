@@ -15,6 +15,9 @@ namespace ResourceMonitor
     [BepInDependency("com.snmodding.nautilus")]
     internal class Plugin : BaseUnityPlugin
     {
+        public const string BepInExDir = "./BepInEx/plugins/ResourceMonitor/";
+        public const string QModsDir = "./QMods/ResourceMonitor/";
+
         public static string MOD_FOLDER_LOCATION;
         public static string ASSETS_FOLDER_LOCATION;
         public static string ASSET_BUNDLE_LOCATION;
@@ -30,45 +33,38 @@ namespace ResourceMonitor
         #region[Declarations]
         private const string
             MODNAME = "ResourceMonitor",
-            AUTHOR = "taylor",
+            AUTHOR = "BrettTaylor & 0x4b",
             GUID = "taylor.brett.ResourceMonitor.mod",
-            VERSION = "2.0.33";
+            VERSION = "2.0.35";
         #endregion
 
         public void Awake()
         {
-            // Determine the folder paths based on file existence
-            if (Directory.Exists("./QMods/ResourceMonitor/"))
-            {
-                MOD_FOLDER_LOCATION = "./QMods/ResourceMonitor/";
-            }
-            else
-            {
-                MOD_FOLDER_LOCATION = "./BepInEx/plugins/ResourceMonitor/";
+            // Determine the folder paths for each file separately
+            MOD_FOLDER_LOCATION = BepInExDir;
+            ASSETS_FOLDER_LOCATION = Directory.Exists(BepInExDir + "Assets/") ? BepInExDir + "Assets/" : QModsDir + "Assets/";
+            ASSET_BUNDLE_LOCATION = File.Exists(BepInExDir + "Assets/resources") ? BepInExDir + "Assets/resources" : QModsDir + "Assets/resources";
+            DONT_TRACK_LOCATION = File.Exists(BepInExDir + "DontTrackList.txt") ? BepInExDir + "DontTrackList.txt" : QModsDir + "DontTrackList.txt";
 
-                // Check if required files and folders exist in BepInEx/plugins/ResourceMonitor
-                bool assetsFolderExists = Directory.Exists(MOD_FOLDER_LOCATION + "Assets/");
-                bool assetBundleExists = File.Exists(MOD_FOLDER_LOCATION + "Assets/resources");
-                bool dontTrackListExists = File.Exists(MOD_FOLDER_LOCATION + "DontTrackList.txt");
-
-                if (!assetsFolderExists || !assetBundleExists || !dontTrackListExists)
-                {
-                    // Log an error message with instructions
-                    Logger.LogError("ResourceMonitor Unofficial Patch is installed incorrectly!");
-                    Logger.LogError("Please install the original mod to the QMods folder via Vortex.");
-                    Logger.LogError("If you chose to install the original to the BepInEx/plugins folder, you must overwrite the DLL with the patch!");
-
-                    // Return early to prevent further execution
-                    return;
-                }
-            }
-
-            ASSETS_FOLDER_LOCATION = MOD_FOLDER_LOCATION + "Assets/";
-            ASSET_BUNDLE_LOCATION = ASSETS_FOLDER_LOCATION + "resources";
-            DONT_TRACK_LOCATION = MOD_FOLDER_LOCATION + "DontTrackList.txt";
+            // Check if required files and folders exist based on the resolved paths
+            bool assetsFolderExists = Directory.Exists(ASSETS_FOLDER_LOCATION);
+            bool assetBundleExists = File.Exists(ASSET_BUNDLE_LOCATION);
+            bool dontTrackListExists = File.Exists(DONT_TRACK_LOCATION);
 
             // Setup Project Logger
             Logger = base.Logger;
+
+            // Verify Files were found 
+            if (!assetsFolderExists || !assetBundleExists || !dontTrackListExists)
+            {
+                // Log an error message with instructions
+                Logger.LogError("ResourceMonitor Unofficial Patch is installed incorrectly!");
+                Logger.LogError("Please install the original mod to the QMods folder via Vortex.");
+                Logger.LogError("If you chose to install the original to the BepInEx/plugins folder, you must overwrite the DLL with the patch!");
+
+                // Return early to prevent further execution
+                return;
+            }
 
             // Load Options from the BepInEx config and setup the options menu
             Options = OptionsPanelHandler.RegisterModOptions<Options>();
