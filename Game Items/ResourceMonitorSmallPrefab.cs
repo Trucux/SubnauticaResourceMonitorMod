@@ -1,8 +1,8 @@
 ﻿
 using Nautilus.Assets;
 using Nautilus.Assets.Gadgets;
+using Nautilus.Handlers;
 using Nautilus.Utility;
-using UnityEngine;
 
 namespace ResourceMonitor
 {
@@ -11,7 +11,7 @@ namespace ResourceMonitor
         public static PrefabInfo Info { get; } = PrefabInfo
             .WithTechType("ResourceMonitorBuildableSmall", "Resource Monitor Small",
             "Track how many resources you have stored away in your sea base on one handy small screen.")
-            .WithIcon(ImageUtils.LoadSpriteFromFile(System.IO.Path.Combine(Plugin.ASSETS_FOLDER_LOCATION, "ResourceMonitorSmall.png")));
+            .WithIcon(ImageUtils.LoadSpriteFromFile(Plugin.SMALL_PNG_LOCATION));
 
         public static void Register()
         {
@@ -27,8 +27,8 @@ namespace ResourceMonitor
             // Assign it to the correct tab in the builder tool:
             prefab.SetPdaGroupCategory(TechGroup.InteriorModules, TechCategory.InteriorModule);
 
-            // Set recipe:
-            prefab.SetRecipe(monitorSmall.GetRecipe());
+            // Unlock it at the start
+            KnownTechHandler.UnlockOnStart(Info.TechType);
 
             // Register it into the game:
             prefab.Register();

@@ -18,8 +18,8 @@ namespace ResourceMonitor
         public const string BepInExDir = "./BepInEx/plugins/ResourceMonitor/";
         public const string QModsDir = "./QMods/ResourceMonitor/";
 
-        public static string MOD_FOLDER_LOCATION;
-        public static string ASSETS_FOLDER_LOCATION;
+        public static string LARGE_PNG_LOCATION;
+        public static string SMALL_PNG_LOCATION;
         public static string ASSET_BUNDLE_LOCATION;
         public static string DONT_TRACK_LOCATION;
 
@@ -33,67 +33,92 @@ namespace ResourceMonitor
         #region[Declarations]
         private const string
             MODNAME = "ResourceMonitor",
-            AUTHOR = "BrettTaylor & 0x4b",
-            GUID = "taylor.brett.ResourceMonitor.mod",
-            VERSION = "2.0.35";
+            AUTHOR = "0x4b",
+            GUID = "katemods.resourcemonitor.unofficial",
+            VERSION = "2.0.36";
         #endregion
 
         public void Awake()
         {
-            // Determine the folder paths for each file separately
-            MOD_FOLDER_LOCATION = BepInExDir;
-            ASSETS_FOLDER_LOCATION = Directory.Exists(BepInExDir + "Assets/") ? BepInExDir + "Assets/" : QModsDir + "Assets/";
-            ASSET_BUNDLE_LOCATION = File.Exists(BepInExDir + "Assets/resources") ? BepInExDir + "Assets/resources" : QModsDir + "Assets/resources";
-            DONT_TRACK_LOCATION = File.Exists(BepInExDir + "DontTrackList.txt") ? BepInExDir + "DontTrackList.txt" : QModsDir + "DontTrackList.txt";
-
-            // Check if required files and folders exist based on the resolved paths
-            bool assetsFolderExists = Directory.Exists(ASSETS_FOLDER_LOCATION);
-            bool assetBundleExists = File.Exists(ASSET_BUNDLE_LOCATION);
-            bool dontTrackListExists = File.Exists(DONT_TRACK_LOCATION);
-
             // Setup Project Logger
             Logger = base.Logger;
 
-            // Verify Files were found 
-            if (!assetsFolderExists || !assetBundleExists || !dontTrackListExists)
+            // Load External Files
+            if (!LoadAssets())
             {
-                // Log an error message with instructions
-                Logger.LogError("ResourceMonitor Unofficial Patch is installed incorrectly!");
-                Logger.LogError("Please install the original mod to the QMods folder via Vortex.");
-                Logger.LogError("If you chose to install the original to the BepInEx/plugins folder, you must overwrite the DLL with the patch!");
-
-                // Return early to prevent further execution
+                Logger.LogError("ResourceMonitor failed to load!");
                 return;
             }
+
+            // Load Tracking list
+            LoadDontTrackList();
 
             // Load Options from the BepInEx config and setup the options menu
             Options = OptionsPanelHandler.RegisterModOptions<Options>();
 
             // Run harmony patches
-            Logger.LogInfo("ResourceMonitor - Started patching v" + Assembly.GetExecutingAssembly().GetName().Version.ToString(3));
             var harmony = new Harmony(GUID);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
-            LoadDontTrackList();
-            LoadAssets();
+            // Register Game Prefabs
             RegisterPrefabs();
 
-            Logger.LogInfo("ResourceMonitor - Finished patching");
+            Logger.LogInfo("ResourceMonitor Loading Complete!");
         }
 
-
-        private static void RegisterPrefabs()
+        private static bool LoadAssets()
         {
-            ResourceMonitorLargePrefab.Register();
-            ResourceMonitorSmallPrefab.Register();
-        }
+            // Determine the folder paths for each file separately
+            LARGE_PNG_LOCATION = File.Exists(BepInExDir + "Assets/ResourceMonitorLarge.png") ? BepInExDir + "Assets/ResourceMonitorLarge.png" : QModsDir + "Assets/ResourceMonitorLarge.png";
+            SMALL_PNG_LOCATION = File.Exists(BepInExDir + "Assets/ResourceMonitorSmall.png") ? BepInExDir + "Assets/ResourceMonitorSmall.png" : QModsDir + "Assets/ResourceMonitorSmall.png";
+            ASSET_BUNDLE_LOCATION = File.Exists(BepInExDir + "Assets/resources") ? BepInExDir + "Assets/resources" : QModsDir + "Assets/resources";
+            DONT_TRACK_LOCATION = File.Exists(BepInExDir + "DontTrackList.txt") ? BepInExDir + "DontTrackList.txt" : QModsDir + "DontTrackList.txt";
 
-        private static void LoadAssets()
-        {
+            // Check if required files and folders exist based on the resolved paths
+            bool picLargeExists = File.Exists(LARGE_PNG_LOCATION);
+            bool picSmallExists = File.Exists(SMALL_PNG_LOCATION);
+            bool assetBundleExists = File.Exists(ASSET_BUNDLE_LOCATION);
+            bool dontTrackListExists = File.Exists(DONT_TRACK_LOCATION);
+
+            // Verify Files were found 
+            if (!picLargeExists || !picSmallExists || !assetBundleExists || !dontTrackListExists)
+            {
+                // Log specific errors for each missing component
+                if (!picLargeExists) {
+                    Logger.LogError($"ResourceMonitorLarge.png is Missing! [{LARGE_PNG_LOCATION}]");
+                }
+
+                if (!picSmallExists) {
+                    Logger.LogError($"ResourceMonitorSmall.png is missing! [{SMALL_PNG_LOCATION}]");
+                }
+
+                if (!assetBundleExists) {
+                    Logger.LogError($"Asset Bundle is missing! [{ASSET_BUNDLE_LOCATION}]");
+                }
+
+                if (!dontTrackListExists) {
+                    Logger.LogError($"Don't Track List is missing! [{DONT_TRACK_LOCATION}]");
+                }
+
+                // Log the overall installation instructions
+                Logger.LogError("ResourceMonitor Unofficial Patch is installed incorrectly!");
+                Logger.LogError("Please install the original mod to the QMods folder via Vortex.");
+                Logger.LogError("If you chose to install the original to the BepInEx/plugins folder, you must overwrite the DLL with the patch!");
+
+                // Return early to prevent further execution
+                return false;
+            }
+
+            Logger.LogInfo("Found the asset bundle: " + ASSET_BUNDLE_LOCATION);
+            Logger.LogInfo("Found ResourceMonitorLarge.png: " + LARGE_PNG_LOCATION);
+            Logger.LogInfo("Found ResourceMonitorSmall.png: " + SMALL_PNG_LOCATION);
+
             var ab = AssetBundle.LoadFromFile(ASSET_BUNDLE_LOCATION);
             RESOURCE_MONITOR_DISPLAY_UI_PREFAB = ab.LoadAsset("ResourceMonitorDisplayUI") as GameObject;
             RESOURCE_MONITOR_DISPLAY_ITEM_UI_PREFAB = ab.LoadAsset("ResourceItem") as GameObject;
             RESOURCE_MONITOR_DISPLAY_MODEL = ab.LoadAsset("ResourceMonitorModel") as GameObject;
+
+            return true;
         }
         private static void LoadDontTrackList()
         {
@@ -117,6 +142,12 @@ namespace ResourceMonitor
             {
                 Logger.LogInfo("[ResourceMonitor] Did not find the dont track list at location: " + DONT_TRACK_LOCATION);
             }
+        }
+
+        private static void RegisterPrefabs()
+        {
+            ResourceMonitorLargePrefab.Register();
+            ResourceMonitorSmallPrefab.Register();
         }
     }
 }

@@ -3,7 +3,6 @@ using Nautilus.Crafting;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using static RootMotion.FinalIK.RagdollUtility;
 
 namespace ResourceMonitor
 {
