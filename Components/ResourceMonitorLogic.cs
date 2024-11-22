@@ -260,8 +260,20 @@ namespace ResourceMonitor.Components
                 {
                     StorageContainer sc = trackedResource.Containers.ElementAt(0);
                     if (sc.container.Contains(item))
-                    {                    
+                    {   
+
                         Pickupable pickup = sc.container.RemoveItem(item);
+                        EnergyMixin energy = pickup.gameObject.GetComponent<EnergyMixin>();
+                        bool hasBattery = false;
+                        if (energy != null)
+                        {
+                            if (energy.HasItem())
+                                hasBattery = true;
+                            else
+                                energy.defaultBattery = TechType.None;
+
+                            energy.Update();
+                        }
                         if (pickup != null)
                         {
                             if (Inventory.main.Pickup(pickup))
@@ -277,6 +289,14 @@ namespace ResourceMonitor.Components
                             {
                                 // If it fails to get added to the inventory lets add it back into the storage container.
                                 sc.container.AddItem(pickup);
+                            }
+
+                            if (pickup.gameObject.TryGetComponent<EnergyMixin>(out EnergyMixin energy2))
+                            {
+                                energy.Update();
+                                if (hasBattery == false)
+                                    if (energy2.HasItem())
+                                        GameObject.DestroyImmediate(energy2.GetBatteryGameObject());
                             }
                         }
                     }

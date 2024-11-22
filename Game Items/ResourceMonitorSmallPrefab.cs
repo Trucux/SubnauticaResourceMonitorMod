@@ -24,8 +24,10 @@ namespace ResourceMonitor
             // Assign the model to the prefab itself:
             prefab.SetGameObject(monitorSmall.CreateObject);
 
-            // Assign it to the correct tab in the builder tool:
+            // Assign it to the correct tab in the builder tool:            
             prefab.SetPdaGroupCategory(TechGroup.InteriorModules, TechCategory.InteriorModule);
+
+            prefab.SetRecipe(monitorSmall.GetRecipe());
 
             // Unlock it at the start
             KnownTechHandler.UnlockOnStart(Info.TechType);

@@ -27,6 +27,8 @@ namespace ResourceMonitor
             // Assign it to the correct tab in the builder tool
             prefab.SetPdaGroupCategory(TechGroup.InteriorModules, TechCategory.InteriorModule);
 
+            prefab.SetRecipe(monitorLarge.GetRecipe());
+
             // Unlock it at the start
             KnownTechHandler.UnlockOnStart(Info.TechType);
 
